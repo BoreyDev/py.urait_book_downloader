@@ -1,0 +1,10 @@
+.venv/**
+.venv
+logs/**
+logs
+settings.toml
+temp/**
+temp
+dist/**
+dist
+output.pdf
