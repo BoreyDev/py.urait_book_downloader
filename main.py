@@ -34,6 +34,12 @@ def screenshot_page(book_page: Page, page_number: int, max_retries: int = 3) -> 
                 if (element) {
                     element.style.display = 'none';
                 }
+            }''', '//*[@id="viewer__wrapper__notifications-new-top"]')
+            book_page.evaluate('''(xpath) => {
+                const element = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                if (element) {
+                    element.style.display = 'none';
+                }
             }''', '//*[@id="viewer__wrapper__notifications-new-bottom"]')
             return True
         except Exception as e:
@@ -76,14 +82,13 @@ def main():
 
     logger.debug(settings)
 
-    book = "https://urait.ru/book/ekonomika-organizacii-545336"
-    wrapper = '//*[@id="viewer__wrapper__elements"]'
+    book = "https://urait.ru/book/pedagogika-545508"
 
     # Запуск браузера
     with sync_playwright() as p:
 
         browser = p.chromium.launch(
-            headless=False,  # Set to True for headless mode
+            headless=True,  # Set to True for headless mode
             slow_mo=50,  # Slows down Playwright operations by 50ms
             ignore_default_args=["--disable-application-cache"],
         )
