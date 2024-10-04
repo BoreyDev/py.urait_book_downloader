@@ -2,11 +2,10 @@
 .venv
 logs/**
 logs
-settings.toml
 temp/**
 temp
 dist/**
 dist
-output.pd
-
+output.pdf
+user.toml
 

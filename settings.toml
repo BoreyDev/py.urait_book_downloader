@@ -1,0 +1,3 @@
+[scraper]
+scale = 1
+cooldown_between_pages = 0.1

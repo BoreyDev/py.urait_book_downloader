@@ -8,10 +8,11 @@ from loguru import logger
 from natsort import natsorted
 from playwright.sync_api import sync_playwright, Page
 
+# Шаблон файла настроек
 template = {"scraper": {"scale": 1, "cooldown_between_pages": 0.1}}
 
+# Логгинг
 level = "DEBUG"
-
 logger.remove()
 logger.add(
     sys.stderr,
@@ -20,6 +21,11 @@ logger.add(
 )
 logger.add("logs/{time}.log", rotation="10 MB", level=level)
 
+# Глобальные переменные
+user: dict
+settings: dict
+
+# Функция, которая делает снимки страниц. Возвращает успех.
 def screenshot_page(book_page: Page, page_number: int, max_retries: int = 3) -> bool:
     for attempt in range(max_retries):
         try:
@@ -28,13 +34,18 @@ def screenshot_page(book_page: Page, page_number: int, max_retries: int = 3) -> 
             book_page.locator(f'xpath=//*[@id="page_{page_number}"]').screenshot(
                 path=f"temp/images/page_{page_number}.png"
             )
+
             logger.info(f"Страница {page_number} была снята")
+
+            # Удаление уведомления сверху
             book_page.evaluate('''(xpath) => {
                 const element = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
                 if (element) {
                     element.style.display = 'none';
                 }
             }''', '//*[@id="viewer__wrapper__notifications-new-top"]')
+
+            # Удаление уведомления снизу
             book_page.evaluate('''(xpath) => {
                 const element = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
                 if (element) {
@@ -53,36 +64,38 @@ def screenshot_page(book_page: Page, page_number: int, max_retries: int = 3) -> 
 
 
 def main():
-    settings: dict
 
-    if not os.path.isfile("settings.toml"):
-        logger.info("Файл настроек не найден, создаётся шаблон")
-
-        login = input("Введите логин Юрайта: ")
-        logger.info(f"Логин введён: {login}")
-
-        password = input("Введите пароль: ")
-        logger.info("Пароль введён.")
+    # Логин и пароль пользователя
+    if not os.path.isfile("user.toml"):
+        logger.info("Файл пользователя не найден")
+        
+        print("Введите логин или электронную почту Юрайта")
+        login = input("> ")
+        
+        print("Введите пароль Юрайта")
+        password = input("> ")
 
         user = {"user": {"login": login, "password": password}}
 
-        settings = user | template
-
-        with open("settings.toml", "w") as f:
-            toml.dump(settings, f)
+        with open("user.toml", "w") as f:
+            toml.dump(user, f)
 
         logger.info(
-            "Создался файл settings.toml. Все ваши данные были сохранены в этом файле."
+            "Создался файл user.toml. Все ваши данные были сохранены в этом файле."
         )
-
     else:
+        with open("user.toml", "r") as f:
+            user = toml.load(f)
 
-        with open("settings.toml", "r") as f:
-            settings = toml.load(f)
+    # Файл настроек
+    with open("settings.toml", "r") as f:
+        settings = toml.load(f)
 
     logger.debug(settings)
 
-    book = "https://urait.ru/book/pedagogika-545508"
+    print("Введите ссылку на книгу в формате:")
+    print("https://urait.ru/book/XXXXXX")
+    book = input("> ")
 
     # Запуск браузера
     with sync_playwright() as p:
